@@ -1,0 +1,348 @@
+This documentation is a work in progress.  Also see help message: yapscan -h
+
+Contents
+========
+
+Section#     Title
+--------     -----
+
+1            Credit
+
+2            Why write Yet Another Port Scanner?
+
+3            Features
+3.1          TCP SYN Scanning
+3.2          (Limited) UDP Port Scanning
+3.3          ICMP Scanning
+3.4          SYN Flooding
+3.5          TCP Connect Flooding
+3.6          Scanning Speed
+3.7          Retries
+
+4            Limitations
+4.1          Memory-hungry
+4.2          Replies from different IPs
+
+
+(1) Credit
+==========
+
+Much inspiration (and even small amounts of code) as been drawn from other
+tools.  It's only right that I pay my dues...
+
+
+synscan (http://bindshell.net/tools/synscan)
+--------------------------------------------
+
+The fastest half-open portscanner that I'm aware of.  I borrowed the code
+for determining link-layer header lengths from synscan.
+
+
+nmap (http://insecure.org/nmap)
+-------------------------------
+
+The most reliable portscanner I'm aware of.  I use nmap during every pentest.
+Most of yapscan's options are designed to be intuitive for nmap users.
+
+
+ike-scan (http://www.nta-monitor.com/tools/ike-scan)
+----------------------------------------------------
+
+Hostlist structures and retries are heavily inspired by ike-scan.
+
+
+hping2 (http://www.hping.org)
+-----------------------------
+
+The output format is loosly based on hping2's.
+
+
+scanrand (http://www.doxpara.com/paketto)
+-----------------------------------------
+
+I love the Inverse SYN Cookies idea.  Very simple method to determine if 
+replies on the wire are meant for your scanner or some other app.
+
+
+netkill	(http://www.security.nnov.ru/files/netkill.pl)
+------------------------------------------------------
+
+Simple little PERL script to do TCP connect floods and more.  I thought it'd
+be useful to build some of this into yapscan.
+
+
+(2) Why write Yet Another Port Scanner?
+=======================================
+
+When I started writing yapscan I wanted to:
+a: Learn some C++
+b: Write some generic classes that handle all the mundane parts of port 
+scanning (like hostlist traversal, retries, bandwidth usage).  
+
+The idea being that next time I needed to write a scanner (whether it
+be ARP, IPv6, DNS server-finder, mass DoS payload deliverer, etc.)
+I'd be able to quickly code up the probe, define how to parse responses
+and the generic classes would take care of the rest.
+
+Alas, my eyes were too big for my belly and I've ended up with yet 
+another IPv4 port scanner.
+
+Maybe I'll acheive my original goal someday, but as of today I'm still
+some way off.
+
+That said, I do find yapscan useful during most pentests, so I thought
+I'd submit it back to he community in hope that others would too.
+
+
+(3) Features
+============
+
+(3.1) TCP SYN Scanning
+----------------------
+
+Also known as half-open scanning.
+
+On an internal network you probably just want to see the open ports.  Here
+are some example of how to specify hosts and ports:
+
+# yapscan -sS 192.168.0.1-254 -p 1-1024
+# yapscan -sS 10.0.0.1-10.0.255.255 -p 21,22,23,53,80,139,445,3389
+# yapscan -sS -f targets-ips.txt -p 4444
+
+From an external network, you might also want to see the closed ports (-c):
+
+# yapscan -sS www.example.com -p 1-65535 -c
+
+You can scan just the common ports (using a portlist derived from nmap):
+
+# yapscan -sS 127.0.0.1 -i lo -P common
+
+(supported keywords are based on filesnames what ship with yapscan.
+ As of v0.4.9-beta there is: all, known, common, database)
+
+Note that we needed to specify the different interface to listen for
+replies on (default is eth0).
+
+Specify ports using names as well as numbers (from /etc/services):
+
+# yapscan -sS router -i eth1 -p telnet,80,443,ssh,6000-6063
+
+Or specify your own port list (1 port per line):
+
+# yapscan -sS -f mytargets.txt -P myports.txt
+
+You can do "-p -" like in nmap too if you want to scan 1-65535:
+
+# yapscan -sS -f mytargets.txt -p -
+
+I've also implemented the exotic type of scans like Xmas tree, null, etc.
+These aren't particularly well tested as of v0.4.9-beta.  See the
+help message for more info: yapscan -h
+
+Also see "Scanning Speed" and "Retries" near the end of this section.  In
+particular, make sure you specify a low speed for remote testing (e.g. -b 32k).
+
+(3.2) (Limited) UDP Port Scanning
+---------------------------------
+
+This scan mode is designed to answer the question "Does host X have any closed
+UDP ports?"  i.e. does it reply with an ICMP Port Unreachable for probes sent
+to one or more of its UDP ports.
+
+This type of scan will (unfortunately) not tell you all the upon UDP ports.
+
+I use this mainly for scanning Firewalled hosts which I'm pretty sure won't 
+have any closed UDP ports.
+
+Yapscan sends empty UDP packets to a range of ports at a steady (usually
+quite fast) rate.  It will report any ICMP port unreachable messages
+it receives.
+
+If you receive no replies then you know there are no closed UDP ports.
+
+# yapscan -su router -i eth1 -p 1-65535
+
+IMPORTANT NOTE: If you receive 1 or more ICMP port unreachable error
+messages, you cannot infer that these are the only close ports.  
+Yapscan does not back-off intellegently like nmap, so a host which
+limits that rate at which it sends ICMP errors, will (falsly) 
+appear to have less ports open.
+
+(3.3) ICMP Scanning
+-------------------
+
+Yapscan can perform the following type of ICMP sweeps:
+- Echo Request
+- Timestamp Request
+- Addressmask Request
+- Information Request
+
+You can perform 1 or more types of scan at once:
+
+# yapscan -sI 10.0.0.0-10.10.255.255 -t echo
+# yapscan -sI 10.0.0.0-10.10.255.255 -t echo -t addr
+# yapscan -sI 10.0.0.0-10.10.255.255 -t info
+# yapscan -sI 10.0.0.0-10.10.255.255 -t time
+# yapscan -sI 10.0.0.0-10.10.255.255 -t -
+
+The last example will scan all supported ICMP types.
+
+As of v0.4.9-beta yapscan is also able to send Router Solicitations, but
+it won't report replies, so this 5th type isn't much use at present.
+
+(3.4) SYN Flooding
+------------------
+
+Bombard some TCP ports with SYN packets.  The DoS attack is only effective
+if the source IP is spoofed to an address that doesn't respond.
+
+The following will send 100000 SYNs as fast as possible to port 445 on
+my.victim.intranet.  The spoofed source IP is set to 10.0.0.1.
+
+./yapscan -sS -F -b 99M -r 100000 -p 445 -S 10.0.0.1 my.victim.intranet
+
+(3.5) TCP Connect Flooding
+--------------------------
+
+The basic method used here is:
+1: Yapscan sends a SYN to an open port on the host
+2: Yapscan see the SYN/ACK reply from the host
+3: Yapscan crafts an ACK to open the connection
+
+To work properly we can't use the host's IP address.  Otherwise the kernel
+will reply to the SYN/ACK with RST and tear down the connection.
+
+Find an unused IP address on your local network (i.e. the network from 
+where you're running yapscan).  We'll use 172.16.16.100 in this example.
+
+ARP for this address, but make sure your kernel doesn't process the packets.
+A simple way to do this is using arp-sk.  
+
+# arp-sk -i vmnet1 -r -S 172.16.16.100
++ Initialization of the packet structure
++ Running mode "reply"
++ Ifname: vmnet1
++ Source MAC: 00:50:56:c0:00:01
++ Source ARP MAC: 00:50:56:c0:00:01
++ Source ARP IP : 172.16.16.100
++ Target MAC: ff:ff:ff:ff:ff:ff
++ Target ARP MAC: ff:ff:ff:ff:ff:ff
++ Target ARP IP : 255.255.255.255
+
+--- Start classical sending ---
+TS: 13:59:42.640305
+To: ff:ff:ff:ff:ff:ff From: 00:50:56:c0:00:01 0x0806
+    ARP For 255.255.255.255 (ff:ff:ff:ff:ff:ff):
+        172.16.16.100 is at 00:50:56:c0:00:01
+
+TS: 13:59:47.646367
+To: ff:ff:ff:ff:ff:ff From: 00:50:56:c0:00:01 0x0806
+    ARP For 255.255.255.255 (ff:ff:ff:ff:ff:ff):
+        172.16.16.100 is at 00:50:56:c0:00:01
+...
+
+(An alternative approach would be to use your own IP address, but set up 
+iptables rules to block RSTs from your kernel.)
+
+Now that we're arping for 172.16.16.100 we just need to tell yapscan to use
+this as the source address (with -S), and to reply to SYN/ACKs (with -A):
+
+# ./yapscan -sS -A -F -b 10k -r 100 -p 445 172.16.16.130 -S 172.16.16.100 -i vmnet1
+Starting Yapscan v0.4.9-beta ( http://pentestmonkey.net/tools/yapscan )
+
+ ----------------------------------------------------------
+|                   Scan Information                       |
+ ----------------------------------------------------------
+Target count: ...... 1
+Interface: ......... vmnet1
+Bandwidth limit: ... 10000 bits/sec
+Source address: .... 172.16.16.100
+RTT: ............... 0.950000 secs
+Tries: ............. 101
+Port range: ........ 445
+Port count: ........ 1
+Show closed ports .. off
+ *** Synflooding!  Output supressed for speed... ***
+ *** Replying to SYN/ACKs                        ***
+
+######## Scan started at 2006-08-26 13:00:36 +0000 #########
+172.16.16.130:445       microsoft-ds    Len=44 TTL=128 DF IPID=54268 FLAGS=SA______ SEQ=0x9bd5cc6e ACK=0xc7656191 WIN=64240
+        Replying with ACK from 172.16.16.100:9033 to 172.16.16.100:445 SEQ=c7656192, ACK=9bd5cc6f
+172.16.16.130:445       microsoft-ds    Len=44 TTL=128 DF IPID=54269 FLAGS=SA______ SEQ=0x9bd69537 ACK=0xb028ca26 WIN=64240
+        Replying with ACK from 172.16.16.100:9034 to 172.16.16.100:445 SEQ=b028ca27, ACK=9bd69538
+172.16.16.130:445       microsoft-ds    Len=44 TTL=128 DF IPID=54270 FLAGS=SA______ SEQ=0x9bd75e9b ACK=0x0b076828 WIN=64240
+        Replying with ACK from 172.16.16.100:9035 to 172.16.16.100:445 SEQ=b076829, ACK=9bd75e9c
+172.16.16.130:445       microsoft-ds    Len=44 TTL=128 DF IPID=54271 FLAGS=SA______ SEQ=0x9bd81307 ACK=0x79b04d44 WIN=64240
+...
+####### Scan completed at 2006-08-26 13:00:40 +0000 #########
+70 positive results.
+
+101 packets (4040 bytes) sent in 3.04 secs.
+Scan rate was: 10621 bits/sec | 1328 bytes/sec | 33 packets/sec.
+
+3.6) Scanning Speed
+-------------------
+
+Yapscan scans at a steady (and configurable) speed.  You can get an ETA on
+you scan by pressing Enter during the scan.
+
+As of v0.4.9-beta yapscan will never underestimate the remaining scan time,
+though it can over estimate it under certain conditions.
+
+By default yapscan scans at 1000000 Bits / Second.  Unless you have a fast 
+link / understanding clients or both I suggest you only use the default for 
+LAN testing.  I wouldn't recommend going much about 2Mb/s for reliability / 
+DoS reasons, but you can try it if you like:
+
+# yapscan -sS -p - 192.168.0.1-14 -b 4M
+
+WAN testing's probably better done at a more sociable speed like 64Kb/s:
+
+# yapscan -sS -p - www.example.com -b 64k
+
+Obviously, if the scan rate is set higher than either your upstream bandwidth
+or the client's downstream bandwidth, packets will be dropped and the 
+reliability of the scan reduced.
+
+(3.7) Retries
+-------------
+
+Reliability is obviously paramount during pentests, so the use of retries
+is encouraged.  ICMP scans do 2 retries by default (a total of 3 tries in all).
+TCP and UDP only do 1.
+
+For an even more reliable ICMP scan you could do:
+
+# yapscan -sI -r 5 myhost -t -
+
+A TCP scan would be made more reliable by:
+
+# yapscan -sS -r 2 myhost -p -
+
+
+(4) Limitations
+===============
+
+(4.1) Memory-hungry
+-------------------
+
+Yapscan implements retries by keeping a list of hosts and ports to be scanned
+in memory.  This has the side effect of using an awful lot of memory on large
+scans:
+	770MB for 65535 ports on 256 hosts
+
+This a pretty big problem.  I really need to break the scan into chunks.
+
+(4.2) Replies from different IPs
+--------------------------------
+
+If you send a packet to an addess which elicits a reply from a different IP
+address (e.g. you ping 192.168.0.255 and get a reply from 192.168.0.5)
+the reply will not be reported by yapscan.
+
+This is because all cookies carry a "cookie" of some description which
+is derived from the source and destination IP of the original probe.  Yapscan
+will inspect the reply and ensure that cookie contained within it is 
+derived from the source and destination IP.  If an unexpcted IP replies
+yapscan will assume that the traffic is not a response to a probe.
+

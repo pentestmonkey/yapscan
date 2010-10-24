@@ -1,0 +1,86 @@
+
+2008-04-06 Yapscan v0.7.4-beta
+
+* Removed "STRANGE" messages from ICMP scanning.  These
+  messages are now only displayed in verbose mode.
+
+2007-12-21 Yapscan v0.7.3-beta
+
+* Fixed crash during debugging with -d -d
+
+2007-07-03 Yapscan v0.7.2-beta
+
+* Fixed crash during ICMP scanning
+
+2007-06-19 Yapscan v0.7.1-beta
+
+* Estimated scan time completion bug fixed
+
+2007-06-10 Yapscan v0.7.0-beta
+
+* Added -m option to specify maximum amount of memory to use
+* If scan can't be completed with the memory available
+  the scan is split into chunks.
+* Changed the "Tries" scan info line to "Retries"
+* Fixed some off-by-one's.  Oops.
+
+2007-04-12 Yapscan v0.6.1-beta
+
+* Prints type of scan being performed in "Scan Information"
+* UDP port list files included
+
+2007-03-07 Yapscan v0.6.0-beta
+
+* Source port is no longer static by default
+* "-l port" now works for UDP scans too
+
+2007-01-16 Yapscan v0.5.9-beta
+
+* Included time.h for compilation on debian
+* -t also takes comma-separated list like -t echo,time,addr
+* Scan type defaults to -sS if -s option is omitted 
+* Fixed some warnings caused by gcc-4.1.x
+
+2006-12-13 Yapscan v0.5.8-beta
+
+* Can now specify a static source port with -l
+
+2006-12-11 Yapscan v0.5.7-beta
+
+* Fixed double-free bug for ICMP scanning
+* Removed support for DoS attacks
+
+2006-10-23 Yapscan v0.5.6-beta
+
+* Overhauled PDF documentation and included in distro tarball.
+
+2006-10-22 Yapscan v0.5.5-beta
+
+* -P option now works for UDP scans
+* ICMP scans now default to ping scans if -t isn't specified
+* Warning message displayed if kernel drops packets
+
+2006-10-07 Yapscan v0.5.4-beta
+
+* Added -n option to turn off name resultion
+* Added -N option to turn off service name resolution
+* -T option now sets TTL (help message wrongly stated -t before)
+* IP ranges can now be specified in 'slash' notation (e.g. 127.0.0.1/24)
+* Fixed crash during TCP scanning
+
+2006-09-26 Yapscan v0.5.2-beta
+
+* Fixes some errors when compiling on gcc 4.1.x
+
+2006-09-23 Yapscan v0.5.1-beta
+
+* Fixed crash during TCP scanning
+
+2006-09-16 Yapscan v0.5.0-beta
+
+* Fixed some errors when compiling on gcc 3.3.x
+
+2006-08-22 Yapscan v0.4.9-beta
+
+* Initial public release
+
