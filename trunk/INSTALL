@@ -1,0 +1,4 @@
+make
+make install
+
+There are comments in the Makefile about compiling without OpenSSL libraries.

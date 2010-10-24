@@ -1,0 +1,6 @@
+Transfer README to a man page.
+Allow ICMP types to be separated with commas (like ports).
+Doesn't scan destination port 0.
+Does it scan n/w, b/c addresses?
+Crashes after the scan is complete sometimes (destructors broken)
+How to handle duplicate replies?
