@@ -68,7 +68,7 @@ unsigned int available_memory_kbytes = 150000;
 void usage ();
 
 // This string is automatically updated by RCS/CVS.  Do not edit.
-char pversion_short[] = "0.7.5-beta";
+char pversion_short[] = "0.7.6-beta";
 char phomepage_url[] = "http://pentestmonkey.net/tools/yapscan";
 
 // Main
@@ -791,6 +791,12 @@ main ( int argc, char **argv) {
 		}
 	}
 
+	// Set TCP specific options
+	if(tcp_scan) {
+		// Are we showing closed ports?
+		sT.setShowClosedPorts(show_closed_ports);
+	}
+	
 	// Calculate the number of hosts we can scan in parallel
 	// This depends on the amount of memory we are allowed to use
 	unsigned int max_hosts = 0;
@@ -1002,9 +1008,6 @@ main ( int argc, char **argv) {
 		// Set TCP specific options
 		if(tcp_scan) {
 			if (debug) sT.dumpPortList();
-	
-			// Are we showing closed ports?
-			sT.setShowClosedPorts(show_closed_ports);
 	
 			if (source_port_flag) {
 				sT.setCustomSourcePort(source_port);
