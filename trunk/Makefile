@@ -1,7 +1,7 @@
 CC=g++
 DATADIR=/usr/local/share/yapscan/
 BINDIR=/usr/local/bin/
-YAPSCAN_VERSION=yapscan-0.7.4-beta
+YAPSCAN_VERSION=yapscan-0.7.6-beta
 
 # Tip for optimising speed: Set march option in CFLAGS, e.g. -march=athlon-xp TODO detect this automatically
 
