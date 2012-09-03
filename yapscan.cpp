@@ -54,8 +54,8 @@ int debug = 0;
 int verbose = 0;
 unsigned int bandwidth_max = 1000000;
 char device[MAXDEVICENAMELENGTH + 1];
-char *saddr = "127.0.0.1";
-char *scan_type = "\0";
+const char *saddr = "127.0.0.1";
+const char *scan_type = "\0";
 int hw_head_len = 14; // ethernet
 unsigned int tries = 1;
 struct timeval rtt_tv;
