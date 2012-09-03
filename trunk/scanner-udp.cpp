@@ -167,7 +167,7 @@ int UdpScanner::sendPacket() {
 	sin.sin_family = AF_INET;
 	sin.sin_port = send_udp.udp.source;
 	sin.sin_addr.s_addr = send_udp.ip.daddr;
-	send_socket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+	send_socket = socket(AF_PACKET, SOCK_RAW, IPPROTO_RAW);
 	if(send_socket < 0)
 	{
 		perror("send socket cannot be open. Are you root?");

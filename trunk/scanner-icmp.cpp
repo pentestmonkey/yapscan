@@ -32,7 +32,7 @@
 // Retries aren't implemented for ICMP scanning!!
 
 // char *icmp_type[] = {
-char *icmp_type[] = {
+const char *icmp_type[] = {
  "ECHO_REPLY",
  "UNKNOWN-TYPE1",
  "UNKNOWN-TYPE2",
@@ -173,7 +173,7 @@ int IcmpScanner::sendPacket() {
 	/* end of sending setup */
 	
 	sin.sin_family = AF_INET;
-	send_socket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+	send_socket = socket(AF_PACKET, SOCK_RAW, IPPROTO_RAW);
 	if(!send_socket) {
 		perror("socket");
 		exit(1);

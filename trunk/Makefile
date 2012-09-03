@@ -10,7 +10,7 @@ YAPSCAN_VERSION=yapscan-0.7.4-beta
 # DEBUGDEFINES=-DDEBUG
 
 # If not debugging
-# CFLAGS=-s -Wall -Woverloaded-virtual -Wsign-promo -Wno-non-virtual-dtor -O3 -fomit-frame-pointer # normal flags
+CFLAGS=-s -Wall -Woverloaded-virtual -Wsign-promo -Wno-non-virtual-dtor -O3 -fomit-frame-pointer # normal flags
 CFLAGS=-s -Wno-write-strings -O3 -fomit-frame-pointer # normal flags
 
 # OpenSSL's MD5 library speeds up scanning.  If you have openssl installed, do this:

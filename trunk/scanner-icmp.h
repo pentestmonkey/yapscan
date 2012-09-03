@@ -52,7 +52,7 @@ struct send_icmp_timestamp {
 	int transmit_ts;
 };
 
-extern char *icmp_type[];
+extern const char *icmp_type[];
 
 class IcmpScanner : public Scanner {
 	public:
