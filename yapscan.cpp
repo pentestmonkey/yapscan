@@ -68,7 +68,7 @@ unsigned int available_memory_kbytes = 150000;
 void usage ();
 
 // This string is automatically updated by RCS/CVS.  Do not edit.
-char pversion_short[] = "0.7.6-beta";
+char pversion_short[] = "0.7.7-beta";
 char phomepage_url[] = "http://pentestmonkey.net/tools/yapscan";
 
 // Main
