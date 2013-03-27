@@ -149,7 +149,7 @@ int Scanner::setHwHeadLenAuto(void) {
 			setHwHeadLen(4);
 			break;
 		case DLT_SLIP:
-			setHwHeadLen(16);
+			setHwHeadLen(16); //apparently this works for ppp0 interface set up by pptp-linux/network-manager-pptp (debian).  auto-detect fails.  -H 16
 			break;
 		case DLT_RAW:
 			setHwHeadLen(0);
